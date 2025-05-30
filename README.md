@@ -47,7 +47,7 @@ e-commerce-api/
 ### 1. Clone the repo
 
 ```bash
-git clone https://github.com/loid-lab/e-commerce-app.git
+git clone https://github.com/loid-lab/e-commerce-api.git
 cd e-commerce-api
 ```
 
