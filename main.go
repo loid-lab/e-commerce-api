@@ -12,7 +12,7 @@ import (
 func init() {
 	initializers.LoadEnv()
 	initializers.ConnectDB()
-	initializers.DB.AutoMigrate(&models.User{}, &models.Address{}, &models.Cart{}, &models.CartItem{}, &models.CartItem{}, &models.Category{}, &models.Order{}, &models.OrderItem{}, &models.Payment{}, &models.Product{})
+	initializers.DB.AutoMigrate(&models.User{}, &models.Address{}, &models.Cart{}, &models.CartItem{}, &models.Category{}, &models.Order{}, &models.OrderItem{}, &models.Payment{}, &models.Product{})
 }
 
 func main() {
