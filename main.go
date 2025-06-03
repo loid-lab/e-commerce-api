@@ -1,6 +1,8 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/loid-lab/e-commerce-api/controllers"
@@ -12,7 +14,24 @@ import (
 func init() {
 	initializers.LoadEnv()
 	initializers.ConnectDB()
-	initializers.DB.AutoMigrate(&models.User{}, &models.Address{}, &models.Cart{}, &models.CartItem{}, &models.Category{}, &models.Order{}, &models.OrderItem{}, &models.Payment{}, &models.Product{})
+	initializers.DB.AutoMigrate(
+		&models.User{},
+		&models.Address{},
+		&models.Cart{},
+		&models.CartItem{},
+		&models.Category{},
+		&models.Order{},
+		&models.OrderItem{},
+		&models.Payment{},
+		&models.Product{},
+	)
+
+	redisClient, err := initializers.RedisConnect()
+	if err != nil {
+		log.Fatalf("Redis connection failed: %v", err)
+	}
+
+	middleware.SetRedisClient(redisClient)
 }
 
 func main() {
@@ -37,6 +56,7 @@ func main() {
 	// Protected routes
 	auth := r.Group("/user")
 	auth.Use(middleware.CheckAuth)
+	auth.Use(middleware.RateLimiterMiddleware("default", middleware.GetRedisClient()))
 	auth.GET("/profile", controllers.GetUserProfile)
 
 	// Cart routes

@@ -9,6 +9,15 @@ services:
       DB_URL: ${DB_URL}
       SECRET: ${SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      REDIS_URL: redis:6379
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
     restart: unless-stopped
 
 # Uncomment this service to run Postgres locally
