@@ -9,11 +9,19 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/loid-lab/e-commerce-api/initializers"
 	"github.com/loid-lab/e-commerce-api/models"
+	"github.com/loid-lab/e-commerce-api/utils"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func CreateUser(c *gin.Context) {
 	var userInput models.User
+
+	recaptchaToken := c.PostForm("recaptchaToken")
+	if err := utils.VerifyRecaptcha(recaptchaToken); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid reCAPTCHA"})
+		return
+	}
 
 	if err := c.ShouldBindJSON(&userInput); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -55,6 +63,14 @@ func CreateUser(c *gin.Context) {
 }
 
 func Login(c *gin.Context) {
+
+	recaptchaToken := c.PostForm("recaptchaToken")
+	if err := utils.VerifyRecaptcha(recaptchaToken); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid reCAPTCHA"})
+		return
+	}
+
 	var userInput models.User
 
 	if err := c.ShouldBindJSON(&userInput); err != nil {

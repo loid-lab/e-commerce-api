@@ -173,6 +173,22 @@ docker-compose up --build
 - `POST /auth/login` — Login and receive JWT  
 - Authenticated routes require `Authorization: Bearer <token>` header
 
+### 🧠 reCAPTCHA Support
+
+Signup and login endpoints optionally support reCAPTCHA v2/v3 for bot protection.  
+Simply send a `recaptchaToken` field in the request body when submitting the form from the frontend.
+
+Example:
+```json
+{
+  "username": "john",
+  "password": "secret123",
+  "recaptchaToken": "token-from-frontend"
+}
+```
+
+Backend verifies this token via Google’s reCAPTCHA API.
+
 ---
 
 ## 💳 Payments (Stripe)
