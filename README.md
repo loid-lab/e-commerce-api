@@ -22,6 +22,7 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - 💳 Stripe Checkout integration
 - 🔐 Auth middleware (with claims)
 - ✅ Zod schema validation (extra layer on frontend/backend if needed)
+- 🚦 Rate limiting middleware backed by Redis for enhanced security and scalability
 
 ---
 
@@ -76,6 +77,13 @@ Update `.env` with your configuration values:
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://localhost:6379
   ```
+
+> **Note:**  
+> This project uses Redis for rate limiting middleware to prevent abuse.  
+> Set `REDIS_URL` in your `.env` file and ensure Redis is running locally or remotely.  
+> The provided Docker Compose includes a Redis service for local development.
+
+---
 
 ---
 
