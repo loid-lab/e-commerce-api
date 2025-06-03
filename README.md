@@ -23,6 +23,7 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - 🔐 Auth middleware (with claims)
 - ✅ Zod schema validation (extra layer on frontend/backend if needed)
 - 🚦 Rate limiting middleware backed by Redis for enhanced security and scalability
+- 🧠 Optional reCAPTCHA validation for signup/login to prevent bot activity
 
 ---
 
@@ -31,9 +32,10 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 ```
 e-commerce-api/
 ├── controllers/
+├── initializers/
 ├── middleware/
 ├── models/
-├── initializers/
+├── utils/
 ├── validators/
 ├── main.go
 ├── go.mod
