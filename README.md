@@ -57,7 +57,7 @@ cd e-commerce-api
 cp .env.example .env
 ```
 
-Update `.env` with your configuration:
+Update `.env` with your configuration values:
 
 - For **Neon (cloud Postgres)**:
 
@@ -65,15 +65,19 @@ Update `.env` with your configuration:
   DB_URL=postgres://user:password@ep-xxx.neon.tech:5432/dbname
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
+  REDIS_URL=redis://redis:6379
   ```
 
 - For **local Postgres** (optional, see Docker Compose below):
 
   ```
-  DB_URL=postgres://postgres:example@localhost:5432/ecommercedb?sslmode=disable
+  DB_URL=postgres://postgres:example@localhost:6379/ecommercedb?sslmode=disable
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
+  REDIS_URL=redis://localhost:6379
   ```
+
+---
 
 ### 3. Running with Docker Compose
 
@@ -93,6 +97,7 @@ services:
       DB_URL: ${DB_URL}
       SECRET: ${SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      REDIS_URL: ${REDIS_URL}
     restart: unless-stopped
 ```
 
@@ -102,9 +107,9 @@ Simply run:
 docker-compose up --build
 ```
 
-#### Using local Postgres
+#### Using local Postgres and Redis
 
-Uncomment or add the following `db` service in your `docker-compose.yaml`:
+Uncomment or add the following `db` and `redis` services in your `docker-compose.yaml`:
 
 ```yaml
 version: '3.8'
@@ -114,12 +119,14 @@ services:
     build: .
     depends_on:
       - db
+      - redis
     ports:
       - "8080:8080"
     environment:
       DB_URL: postgres://postgres:example@db:5432/ecommercedb?sslmode=disable
       SECRET: ${SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      REDIS_URL: redis://redis:6379
     restart: unless-stopped
 
   db:
@@ -133,6 +140,12 @@ services:
       - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
 
 volumes:
   pgdata:
@@ -156,7 +169,7 @@ docker-compose up --build
 
 ## 💳 Payments (Stripe)
 
-- `POST /user/payments/checkout` — Initiate Stripe checkout session  
+- `POST /user/orders/:id/pay` — Initiate Stripe checkout session  
 - Payments stored in DB with status `pending`/`paid`
 
 ---
@@ -172,4 +185,4 @@ Zod schemas (stored in `validators/`) are optional but recommended for:
 
 ## 📘 License
 
-MIT — feel free to use, modify, or contribute.# e-commerce-api
+MIT — feel free to use, modify, or contribute.
