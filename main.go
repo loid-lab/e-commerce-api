@@ -16,14 +16,15 @@ func init() {
 	initializers.ConnectDB()
 	initializers.DB.AutoMigrate(
 		&models.User{},
-		&models.Address{},
+		&models.Product{},
+		&models.Order{},
+		&models.OrderItem{},
 		&models.Cart{},
 		&models.CartItem{},
 		&models.Category{},
-		&models.Order{},
-		&models.OrderItem{},
 		&models.Payment{},
-		&models.Product{},
+		&models.Invoice{},
+		&models.InvoiceItem{},
 	)
 
 	redisClient, err := initializers.RedisConnect()
