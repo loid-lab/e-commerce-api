@@ -1,5 +1,4 @@
 version: '3.8'
-
 services:
   api:
     build: .
@@ -9,29 +8,13 @@ services:
       DB_URL: ${DB_URL}
       SECRET: ${SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      REDIS_URL: redis:6379
-    depends_on:
-      - redis
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      REDIS_URL: ${REDIS_URL}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
+      MAIL_FROM: ${MAIL_FROM}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET}
     restart: unless-stopped
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
-    restart: unless-stopped
-
-# Uncomment this service to run Postgres locally
-# db:
-#   image: postgres:15-alpine
-#   restart: always
-#   environment:
-#     POSTGRES_USER: postgres
-#     POSTGRES_PASSWORD: example
-#     POSTGRES_DB: ecommercedb
-#   volumes:
-#     - pgdata:/var/lib/postgresql/data
-#   ports:
-#     - "5432:5432"
-
-#volumes:
-#  pgdata:
