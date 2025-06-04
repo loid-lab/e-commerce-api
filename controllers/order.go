@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
@@ -33,6 +34,45 @@ func CreateOrder(c *gin.Context) {
 			"error": "Could not create order"})
 		return
 	}
+
+	invoice := models.Invoice{
+		InvoiceNumber: fmt.Sprintf("INV-%d", time.Now().Unix()),
+		Date:          time.Now(),
+		CustomerName:  user.(models.User).FullName,
+		Items:         []models.InvoiceItem{},
+	}
+
+	for _, item := range order.Items {
+		invoice.Items = append(invoice.Items, models.InvoiceItem{
+			ProductName: item.Product.Name,
+			Quantity:    item.Quantity,
+			UnitPrice:   item.UnitPrice,
+			TotalPrice:  item.TotalPrice,
+		})
+	}
+
+	invoice.UserID = order.UserID
+
+	if err := initializers.DB.Create(&invoice).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Could not create invoice"})
+		return
+	}
+
+	email := models.EmailData{
+		From:     "no-reply@example.com",
+		To:       user.(models.User).Email,
+		Subject:  "Your (company name) Invoice",
+		HTMLBody: "<p>Thanks for your order! Your invoice is attached.</p>",
+		SMTConfig: models.SMTConfig{
+			SMTPHost: initializers.Env.SMTPHost,
+			SMTPPort: initializers.Env.SMTPPort,
+			SMTPUser: initializers.Env.SMTPUser,
+			SMTPPass: initializers.Env.SMTPPass,
+		},
+	}
+
+	go utils.GenerateSendInvoice(invoice, email)
 
 	c.JSON(http.StatusOK, gin.H{
 		"order": order})

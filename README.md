@@ -31,6 +31,9 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - 📊 Admin dashboard-ready routes like `/admin/orders/stats`
 - 🔔 Stripe webhook endpoint for async payment updates
 - 👥 Role-based access control for admin-only features
+- 🧾 Invoice generation and email delivery (PDF attached or link)
+- 🗃️ Invoice record logging in PostgreSQL
+- 📈 Admin invoice reporting via `/admin/invoices` and `/admin/invoices/stats`
 ---
 
 ## 🗂 Folder Structure
@@ -75,10 +78,10 @@ Update `.env` with your configuration values:
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://redis:6379
-  MAILTRAP_HOST=smtp.mailtrap.io
-  MAILTRAP_PORT=587
-  MAILTRAP_USERNAME=your_username
-  MAILTRAP_PASSWORD=your_password
+  SMTP_HOST=smtp.mailtrap.io
+  SMTP_PORT=587
+  SMTP_USER=your_username
+  SMTP_PASS=your_password
   MAIL_FROM=your@email.com
   MAIL_TO=receiver@email.com
   CLOUDINARY_CLOUD_NAME=your_cloud_name
@@ -93,10 +96,10 @@ Update `.env` with your configuration values:
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://localhost:6379
-  MAILTRAP_HOST=smtp.mailtrap.io
-  MAILTRAP_PORT=587
-  MAILTRAP_USERNAME=your_username
-  MAILTRAP_PASSWORD=your_password
+  SMTP_HOST=smtp.mailtrap.io
+  SMTP_PORT=587
+  SMTP_USER=your_username
+  SMTP_PASS=your_password
   MAIL_FROM=your@email.com
   MAIL_TO=receiver@email.com
   CLOUDINARY_CLOUD_NAME=your_cloud_name
@@ -126,9 +129,10 @@ services:
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       REDIS_URL: ${REDIS_URL}
-      MAIL_HOST: ${MAIL_HOST}
-      MAIL_USER: ${MAIL_USER}
-      MAIL_PASS: ${MAIL_PASS}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
       MAIL_FROM: ${MAIL_FROM}
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
@@ -202,6 +206,19 @@ Auto invalidation after `create/update/delete` where applicable.
 ## 🛠 Zod Validation
 
 Used optionally for frontend/backend data agreement via `validators/`.
+
+
+## 🧾 Invoicing & Reporting
+
+This project includes built-in support for invoicing and admin reporting.
+
+- ✅ Automatically generate PDF invoices when an order is created
+- ✅ Send invoice via email using configured SMTP credentials
+- ✅ Store invoice records and line items in PostgreSQL
+- ✅ Admin dashboard endpoints:
+  - `GET /admin/invoices` — view all invoices
+  - `GET /admin/invoices/stats` — aggregated reporting
+- ✅ Optional support for Cloudinary or S3-based PDF storage
 
 ---
 

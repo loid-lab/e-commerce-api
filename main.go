@@ -59,6 +59,7 @@ func main() {
 	// Admin analytics routes
 	r.GET("/admin/metrics/sales", middleware.CheckAuth, middleware.CheckAdmin, controllers.GetSalesMetrics)
 	r.GET("/admin/orders/stats", middleware.CheckAuth, middleware.CheckAdmin, controllers.GetOrderStats)
+	r.GET("/admin/invoices", middleware.CheckAdmin, controllers.GetALlInvoices)
 
 	// Protected user routes
 	auth := r.Group("/user")

