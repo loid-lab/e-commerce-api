@@ -32,6 +32,8 @@ func init() {
 	}
 
 	middleware.SetRedisClient(redisClient)
+
+	initializers.ConnectCloudinary()
 }
 
 func main() {
@@ -52,8 +54,13 @@ func main() {
 	// Public auth routes
 	r.POST("/auth/signup", controllers.CreateUser)
 	r.POST("/auth/login", controllers.Login)
+	r.POST("/webhooks/stripe", controllers.StripeWebhook)
 
-	// Protected routes
+	// Admin analytics routes
+	r.GET("/admin/metrics/sales", middleware.CheckAuth, middleware.CheckAdmin, controllers.GetSalesMetrics)
+	r.GET("/admin/orders/stats", middleware.CheckAuth, middleware.CheckAdmin, controllers.GetOrderStats)
+
+	// Protected user routes
 	auth := r.Group("/user")
 	auth.Use(middleware.CheckAuth)
 	auth.Use(middleware.RateLimiterMiddleware("default", middleware.GetRedisClient()))
@@ -69,9 +76,9 @@ func main() {
 	r.GET("/products/:id", controllers.GetProductByID)
 
 	// Protected product routes
-	auth.POST("/products", controllers.CreateProduct)
-	auth.PUT("/products/:id", controllers.UpdateProducts)
-	auth.DELETE("/products/:id", controllers.DeleteProduct)
+	auth.POST("/products", middleware.CheckAdmin, controllers.CreateProduct)
+	auth.PUT("/products/:id", middleware.CheckAdmin, controllers.UpdateProducts)
+	auth.DELETE("/products/:id", middleware.CheckAdmin, controllers.DeleteProduct)
 
 	// Order routes
 	auth.POST("/orders", controllers.CreateOrder)
@@ -80,8 +87,10 @@ func main() {
 
 	// Category routes
 	r.GET("/categories", controllers.GetCategories)
-	auth.POST("/categories", controllers.CreateCategory)
+	auth.POST("/categories", middleware.CheckAdmin, controllers.CreateCategory)
 
 	// Payment routes
 	auth.POST("/orders/:id/pay", controllers.CreateStripeCheckoutSession)
+
+	r.Run()
 }

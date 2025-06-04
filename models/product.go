@@ -4,7 +4,7 @@ import "time"
 
 type Product struct {
 	ID          uint    `gorm:"primaryKey"`
-	Title       string  `gorm:"not null"`
+	Name        string  `gorm:"not null"`
 	Description string  `gorm:"type:text"`
 	Price       float64 `gorm:"not null"`
 	Stock       int     `gorm:"not null"`

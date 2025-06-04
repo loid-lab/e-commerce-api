@@ -1,9 +1,11 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/gin-gonic/gin"
 	"github.com/loid-lab/e-commerce-api/initializers"
 	"github.com/loid-lab/e-commerce-api/models"
@@ -13,29 +15,44 @@ import (
 func CreateProduct(c *gin.Context) {
 	var product models.Product
 
-	if err := c.ShouldBindJSON(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
+	if err := c.Request.ParseMultipartForm(10 << 20); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "File too big"})
 		return
 	}
 
-	err := utils.InvalidateKeys(initializers.RedisCLient, "products:all")
-	if err != nil {
-		c.Error(err)
+	file, _, err := c.Request.FormFile("image")
+	if err == nil && file != nil {
+		uploadParams := uploader.UploadParams{Folder: "products"}
+		uploadResult, err := initializers.Cloudinary.Upload.Upload(c, file, uploadParams)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Image upload failed"})
+			return
+		}
+		product.ImageURL = uploadResult.SecureURL
+	}
+
+	product.Name = c.PostForm("name")
+	categoryID := c.PostForm("category_id")
+	if categoryID != "" {
+		var id uint
+		fmt.Sscanf(categoryID, "%d", &id)
+		product.CategoryID = id
 	}
 
 	user, _ := c.Get("currentUser")
 	product.CreatedBy = user.(models.User).ID
 
+	err = utils.InvalidateKeys(initializers.RedisCLient, "products:all")
+	if err != nil {
+		c.Error(err)
+	}
+
 	if err := initializers.DB.Create(&product).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"error": "Could not create product"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create product"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"product": product})
+	c.JSON(http.StatusOK, gin.H{"product": product})
 }
 
 func GetAllProducts(c *gin.Context) {

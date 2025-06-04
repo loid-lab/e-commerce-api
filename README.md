@@ -27,7 +27,10 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - 🧠 Optional reCAPTCHA validation for signup/login to prevent bot activity
 - 📧 Email sending with Mailtrap (used for signup/order confirmations)
 - 🚀 Redis caching integrated for product, category, order, and cart reads
-
+- 🖼️ Image/file upload via Cloudinary (used for product images)
+- 📊 Admin dashboard-ready routes like `/admin/orders/stats`
+- 🔔 Stripe webhook endpoint for async payment updates
+- 👥 Role-based access control for admin-only features
 ---
 
 ## 🗂 Folder Structure
@@ -36,7 +39,7 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 e-commerce-api/
 ├── controllers/     # HTTP handlers for routes
 ├── initializers/    # DB, Redis, and env config
-├── middleware/      # JWT, rate limiting, etc.
+├── middleware/      # JWT, rate limiting, admin role checks
 ├── models/          # GORM models
 ├── utils/           # Reusable utilities (cache, mail, recaptcha, etc.)
 ├── validators/      # Zod schemas (for optional validation)
@@ -78,6 +81,9 @@ Update `.env` with your configuration values:
   MAILTRAP_PASSWORD=your_password
   MAIL_FROM=your@email.com
   MAIL_TO=receiver@email.com
+  CLOUDINARY_CLOUD_NAME=your_cloud_name
+  CLOUDINARY_API_KEY=your_api_key
+  CLOUDINARY_API_SECRET=your_api_secret
   ```
 
 - For **local Postgres** (optional, see Docker Compose below):
@@ -87,7 +93,15 @@ Update `.env` with your configuration values:
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://localhost:6379
-  ... # same Mailtrap vars
+  MAILTRAP_HOST=smtp.mailtrap.io
+  MAILTRAP_PORT=587
+  MAILTRAP_USERNAME=your_username
+  MAILTRAP_PASSWORD=your_password
+  MAIL_FROM=your@email.com
+  MAIL_TO=receiver@email.com
+  CLOUDINARY_CLOUD_NAME=your_cloud_name
+  CLOUDINARY_API_KEY=your_api_key
+  CLOUDINARY_API_SECRET=your_api_secret
   ```
 
 > **Note:**  
@@ -153,7 +167,7 @@ Add `db` and `redis` services in `docker-compose.yaml`:
 - `POST /auth/signup` — Register new user  
 - `POST /auth/login` — Login and receive JWT  
 - Authenticated routes require `Authorization: Bearer <token>`
-
+- Admin-only routes are protected using role-based middleware. A `User` must have a `Role` field set to `"admin"` to access them.
 ---
 
 ### 🧠 reCAPTCHA Support
