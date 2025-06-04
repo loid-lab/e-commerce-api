@@ -124,13 +124,15 @@ services:
       DB_URL: ${DB_URL}
       SECRET: ${SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
       REDIS_URL: ${REDIS_URL}
-      MAILTRAP_HOST: ${MAILTRAP_HOST}
-      MAILTRAP_PORT: ${MAILTRAP_PORT}
-      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME}
-      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD}
+      MAIL_HOST: ${MAIL_HOST}
+      MAIL_USER: ${MAIL_USER}
+      MAIL_PASS: ${MAIL_PASS}
       MAIL_FROM: ${MAIL_FROM}
-      MAIL_TO: ${MAIL_TO}
+      CLOUDINARY_CLOUD_NAME: $ {CLOUDINARY_CLOUD_NAME}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY}
+      CLOUDINARY_API_SECRET:{CLOUDINARY_API_SECRET}
     restart: unless-stopped
 ```
 
@@ -179,7 +181,7 @@ Signup/login support reCAPTCHA v2/v3. Send `recaptchaToken` in form payload.
 ## 💳 Payments (Stripe)
 
 - `POST /user/orders/:id/pay` — Initiate Stripe checkout session  
-- Stripe session stores payment reference
+- `POST /webhooks/stripe` — Stripe webhook endpoint to update order/payment statuses asynchronously
 
 ---
 
