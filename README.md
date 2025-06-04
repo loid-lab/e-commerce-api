@@ -24,6 +24,7 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - ✅ Zod schema validation (extra layer on frontend/backend if needed)
 - 🚦 Rate limiting middleware backed by Redis for enhanced security and scalability
 - 🧠 Optional reCAPTCHA validation for signup/login to prevent bot activity
+- 📧 Email sending with Mailtrap (used for signup/order confirmations)
 
 ---
 
@@ -69,6 +70,10 @@ Update `.env` with your configuration values:
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://redis:6379
+  MAIL_HOST=live.smtp.mailtrap.io
+  MAIL_USER=your_mailtrap_username
+  MAIL_PASS=your_mailtrap_password
+  MAIL_FROM=no-reply@example.com
   ```
 
 - For **local Postgres** (optional, see Docker Compose below):
@@ -78,6 +83,10 @@ Update `.env` with your configuration values:
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://localhost:6379
+  MAIL_HOST=live.smtp.mailtrap.io
+  MAIL_USER=your_mailtrap_username
+  MAIL_PASS=your_mailtrap_password
+  MAIL_FROM=no-reply@example.com
   ```
 
 > **Note:**  

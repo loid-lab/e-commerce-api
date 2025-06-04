@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -60,6 +61,12 @@ func CreateUser(c *gin.Context) {
 		})
 		return
 	}
+
+	utils.SendMail(models.EmailData{
+		To:       user.Email,
+		Subject:  "Welcome to (insert company name here)",
+		HTMLBody: fmt.Sprintf("<h2>Welcome %s!</h2><p>Your account has been created</p>", user.Email),
+	})
 }
 
 func Login(c *gin.Context) {
