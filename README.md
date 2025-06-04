@@ -11,6 +11,7 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - **JWT Auth**
 - **Stripe Payments**
 - **Zod** (for shared schema validation)
+- **Redis** (for rate limiting + caching)
 
 ---
 
@@ -24,7 +25,7 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - ✅ Zod schema validation (extra layer on frontend/backend if needed)
 - 🚦 Rate limiting middleware backed by Redis for enhanced security and scalability
 - 🧠 Optional reCAPTCHA validation for signup/login to prevent bot activity
-- 📧 Email sending with Mailtrap (used for signup/order confirmations)
+- 🚀 Redis caching integrated for product, category, order, and cart reads
 
 ---
 
@@ -32,15 +33,15 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 
 ```
 e-commerce-api/
-├── controllers/
-├── initializers/
-├── middleware/
-├── models/
-├── utils/
-├── validators/
-├── main.go
+├── controllers/     # HTTP handlers for routes
+├── initializers/    # DB, Redis, and env config
+├── middleware/      # JWT, rate limiting, etc.
+├── models/          # GORM models
+├── utils/           # Reusable utilities (cache, mail, recaptcha, etc.)
+├── validators/      # Zod schemas (for optional validation)
+├── main.go          # Application entry point
 ├── go.mod
-├── .env.example
+├── .env.example     # Sample env vars
 └── README.md
 ```
 
@@ -70,10 +71,12 @@ Update `.env` with your configuration values:
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://redis:6379
-  MAIL_HOST=live.smtp.mailtrap.io
-  MAIL_USER=your_mailtrap_username
-  MAIL_PASS=your_mailtrap_password
-  MAIL_FROM=no-reply@example.com
+  MAILTRAP_HOST=smtp.mailtrap.io
+  MAILTRAP_PORT=587
+  MAILTRAP_USERNAME=your_username
+  MAILTRAP_PASSWORD=your_password
+  MAIL_FROM=your@email.com
+  MAIL_TO=receiver@email.com
   ```
 
 - For **local Postgres** (optional, see Docker Compose below):
@@ -83,18 +86,11 @@ Update `.env` with your configuration values:
   SECRET=your_jwt_secret
   STRIPE_SECRET_KEY=sk_test_...
   REDIS_URL=redis://localhost:6379
-  MAIL_HOST=live.smtp.mailtrap.io
-  MAIL_USER=your_mailtrap_username
-  MAIL_PASS=your_mailtrap_password
-  MAIL_FROM=no-reply@example.com
+  ... # same Mailtrap vars
   ```
 
 > **Note:**  
-> This project uses Redis for rate limiting middleware to prevent abuse.  
-> Set `REDIS_URL` in your `.env` file and ensure Redis is running locally or remotely.  
-> The provided Docker Compose includes a Redis service for local development.
-
----
+> This project uses Redis for **rate limiting** and **caching**. Set `REDIS_URL` and ensure Redis is running locally or remotely.
 
 ---
 
@@ -102,11 +98,8 @@ Update `.env` with your configuration values:
 
 #### Using Neon (cloud DB)
 
-Your `docker-compose.yaml` should look like:
-
 ```yaml
 version: '3.8'
-
 services:
   api:
     build: .
@@ -117,37 +110,24 @@ services:
       SECRET: ${SECRET}
       STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
       REDIS_URL: ${REDIS_URL}
+      MAILTRAP_HOST: ${MAILTRAP_HOST}
+      MAILTRAP_PORT: ${MAILTRAP_PORT}
+      MAILTRAP_USERNAME: ${MAILTRAP_USERNAME}
+      MAILTRAP_PASSWORD: ${MAILTRAP_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_TO: ${MAIL_TO}
     restart: unless-stopped
 ```
-
-Simply run:
 
 ```bash
 docker-compose up --build
 ```
 
-#### Using local Postgres and Redis
+#### Using local Postgres + Redis
 
-Uncomment or add the following `db` and `redis` services in your `docker-compose.yaml`:
+Add `db` and `redis` services in `docker-compose.yaml`:
 
 ```yaml
-version: '3.8'
-
-services:
-  api:
-    build: .
-    depends_on:
-      - db
-      - redis
-    ports:
-      - "8080:8080"
-    environment:
-      DB_URL: postgres://postgres:example@db:5432/ecommercedb?sslmode=disable
-      SECRET: ${SECRET}
-      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
-      REDIS_URL: redis://redis:6379
-    restart: unless-stopped
-
   db:
     image: postgres:15-alpine
     restart: always
@@ -155,8 +135,6 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: example
       POSTGRES_DB: ecommercedb
-    volumes:
-      - pgdata:/var/lib/postgresql/data
     ports:
       - "5432:5432"
 
@@ -165,15 +143,6 @@ services:
     restart: always
     ports:
       - "6379:6379"
-
-volumes:
-  pgdata:
-```
-
-Run with:
-
-```bash
-docker-compose up --build
 ```
 
 ---
@@ -182,39 +151,39 @@ docker-compose up --build
 
 - `POST /auth/signup` — Register new user  
 - `POST /auth/login` — Login and receive JWT  
-- Authenticated routes require `Authorization: Bearer <token>` header
+- Authenticated routes require `Authorization: Bearer <token>`
+
+---
 
 ### 🧠 reCAPTCHA Support
 
-Signup and login endpoints optionally support reCAPTCHA v2/v3 for bot protection.  
-Simply send a `recaptchaToken` field in the request body when submitting the form from the frontend.
-
-Example:
-```json
-{
-  "username": "john",
-  "password": "secret123",
-  "recaptchaToken": "token-from-frontend"
-}
-```
-
-Backend verifies this token via Google’s reCAPTCHA API.
+Signup/login support reCAPTCHA v2/v3. Send `recaptchaToken` in form payload.
 
 ---
 
 ## 💳 Payments (Stripe)
 
 - `POST /user/orders/:id/pay` — Initiate Stripe checkout session  
-- Payments stored in DB with status `pending`/`paid`
+- Stripe session stores payment reference
+
+---
+
+## 🧊 Redis Caching
+
+Improves performance for heavy-read routes:
+
+- 🔁 Products: `GET /products`, `GET /products/:id`
+- 🔁 Orders: `GET /orders`, `GET /orders/:id`
+- 🔁 Categories: `GET /categories`
+- 🔁 Carts: `GET /cart`
+
+Auto invalidation after `create/update/delete` where applicable.
 
 ---
 
 ## 🛠 Zod Validation
 
-Zod schemas (stored in `validators/`) are optional but recommended for:
-
-- Frontend-to-backend shared validation  
-- Backend request payload validation  
+Used optionally for frontend/backend data agreement via `validators/`.
 
 ---
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -14,18 +15,14 @@ var RedisCLient *redis.Client
 
 func RedisConnect() (*redis.Client, error) {
 	redisUrl := os.Getenv("REDIS_URL")
-	if redisUrl == "" {
-		return nil, ErrMissingRedisUrl
-	}
-
-	client := redis.NewClient(&redis.Options{
-		Addr: redisUrl,
+	RedisClient := redis.NewClient(&redis.Options{
+		Addr:     redisUrl,
+		Password: "", // or from .env when needed
+		DB:       0,
 	})
 
-	if err := client.Ping(context.Background()).Err(); err != nil {
-		return nil, err
-	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
 
-	RedisCLient = client
-	return client, nil
+	return RedisClient, RedisClient.Ping(ctx).Err()
 }
