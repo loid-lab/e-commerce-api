@@ -25,6 +25,7 @@ This is a **Go-based e-commerce backend API** built with the Gin framework and G
 - ✅ Zod schema validation (extra layer on frontend/backend if needed)
 - 🚦 Rate limiting middleware backed by Redis for enhanced security and scalability
 - 🧠 Optional reCAPTCHA validation for signup/login to prevent bot activity
+- 📧 Email sending with Mailtrap (used for signup/order confirmations)
 - 🚀 Redis caching integrated for product, category, order, and cart reads
 
 ---
