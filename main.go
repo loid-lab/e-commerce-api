@@ -2,6 +2,8 @@ package main
 
 import (
 	"log"
+	"os"
+	"strings"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -46,53 +48,54 @@ func main() {
 
 	// Cors configurations
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173"}, // React dev server
+		AllowOrigins:     strings.Split(os.Getenv("CORS_ORIGINS"), ","),
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Authorization", "Content-Type"},
 		AllowCredentials: true,
 	}))
 
-	// Public auth routes
+	// Public routes
 	r.POST("/auth/signup", controllers.CreateUser)
 	r.POST("/auth/login", controllers.Login)
 	r.POST("/webhooks/stripe", controllers.StripeWebhook)
 
-	// Admin analytics routes
-	r.GET("/admin/metrics/sales", middleware.CheckAuth, middleware.CheckAdmin, controllers.GetSalesMetrics)
-	r.GET("/admin/orders/stats", middleware.CheckAuth, middleware.CheckAdmin, controllers.GetOrderStats)
-	r.GET("/admin/invoices", middleware.CheckAdmin, controllers.GetALlInvoices)
+	// Admin routes
+	admin := r.Group("/admin")
+	admin.Use(middleware.CheckAuth, middleware.CheckAdmin)
+	{
+		admin.GET("/metrics/sales", controllers.GetSalesMetrics)
+		admin.GET("/orders/stats", controllers.GetOrderStats)
+		admin.GET("/invoices", controllers.GetAllInvoices)
+	}
 
-	// Protected user routes
+	// Authenticated user routes
 	auth := r.Group("/user")
 	auth.Use(middleware.CheckAuth)
 	auth.Use(middleware.RateLimiterMiddleware("default", middleware.GetRedisClient()))
-	auth.GET("/profile", controllers.GetUserProfile)
+	{
+		auth.GET("/profile", controllers.GetUserProfile)
 
-	// Cart routes
-	auth.GET("/cart", controllers.GetCart)
-	auth.POST("/cart/items", controllers.AddToCart)
-	auth.PUT("/cart/item/:id", controllers.DeleteCartItem)
+		auth.GET("/cart", controllers.GetCart)
+		auth.POST("/cart/items", controllers.AddToCart)
+		auth.PUT("/cart/item/:id", controllers.DeleteCartItem)
 
-	// Public product routes
+		auth.POST("/orders", controllers.CreateOrder)
+		auth.GET("/orders", controllers.GetUserOrder)
+		auth.GET("/orders/:id", controllers.GetOrderByID)
+
+		auth.POST("/orders/:id/pay", controllers.CreateStripeCheckoutSession)
+
+		auth.POST("/products", middleware.CheckAdmin, controllers.CreateProduct)
+		auth.PUT("/products/:id", middleware.CheckAdmin, controllers.UpdateProducts)
+		auth.DELETE("/products/:id", middleware.CheckAdmin, controllers.DeleteProduct)
+
+		auth.POST("/categories", middleware.CheckAdmin, controllers.CreateCategory)
+	}
+
+	// Public product and category routes
 	r.GET("/products", controllers.GetAllProducts)
 	r.GET("/products/:id", controllers.GetProductByID)
-
-	// Protected product routes
-	auth.POST("/products", middleware.CheckAdmin, controllers.CreateProduct)
-	auth.PUT("/products/:id", middleware.CheckAdmin, controllers.UpdateProducts)
-	auth.DELETE("/products/:id", middleware.CheckAdmin, controllers.DeleteProduct)
-
-	// Order routes
-	auth.POST("/orders", controllers.CreateOrder)
-	auth.GET("/orders", controllers.GetUserOrder)
-	auth.GET("/orders/:id", controllers.GetOrderByID)
-
-	// Category routes
 	r.GET("/categories", controllers.GetCategories)
-	auth.POST("/categories", middleware.CheckAdmin, controllers.CreateCategory)
-
-	// Payment routes
-	auth.POST("/orders/:id/pay", controllers.CreateStripeCheckoutSession)
 
 	r.Run()
 }
