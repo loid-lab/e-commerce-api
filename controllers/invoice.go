@@ -8,7 +8,7 @@ import (
 	"github.com/loid-lab/e-commerce-api/models"
 )
 
-func GetALlInvoices(c *gin.Context) {
+func GetAllInvoices(c *gin.Context) {
 	var invoices []models.Invoice
 	err := initializers.DB.Preload("Item").Find(&invoices).Error
 	if err != nil {
